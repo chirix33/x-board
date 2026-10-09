@@ -29,34 +29,42 @@ export function SignInForm() {
     router.refresh();
   }
 
+  const errorId = "sign-in-error";
+
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-s">
-      <label className="flex flex-col gap-2xs text-body">
+      <label className="flex flex-col gap-2xs text-body" htmlFor="sign-in-email">
         Email
         <input
+          id="sign-in-email"
           type="email"
           name="email"
           autoComplete="email"
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="min-h-11 rounded-[var(--radius-control)] border border-border bg-page px-xs text-body text-ink"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className="min-h-11 rounded-[var(--radius-control)] border border-border bg-surface px-xs text-body text-ink"
         />
       </label>
-      <label className="flex flex-col gap-2xs text-body">
+      <label className="flex flex-col gap-2xs text-body" htmlFor="sign-in-password">
         Password
         <input
+          id="sign-in-password"
           type="password"
           name="password"
           autoComplete="current-password"
           required
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="min-h-11 rounded-[var(--radius-control)] border border-border bg-page px-xs text-body text-ink"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className="min-h-11 rounded-[var(--radius-control)] border border-border bg-surface px-xs text-body text-ink"
         />
       </label>
       {error ? (
-        <p className="text-body text-danger" role="alert">
+        <p id={errorId} className="text-body text-danger" role="alert">
           {error}
         </p>
       ) : null}

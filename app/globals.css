@@ -33,31 +33,54 @@
   --palette-ink: #ede9e6;
   --palette-accent: #c9996b;
   --palette-on-accent: #2a211e;
-  --color-bg-page: var(--palette-page);
-  --color-text: var(--palette-ink);
-  --color-text-muted: color-mix(in oklab, var(--palette-ink) 82%, var(--palette-page));
-  --color-border: color-mix(in oklab, var(--palette-ink) 62%, var(--palette-page));
-  --color-bg-surface: color-mix(in oklab, var(--palette-ink) 8%, var(--palette-page));
-  --color-accent-hover: color-mix(in oklab, var(--palette-accent) 82%, var(--palette-ink));
-  --color-on-accent: var(--palette-on-accent);
-  --color-danger: #f3c4bc;
+  --palette-brand: #c9996b;
+  --palette-danger: #f3c4bc;
+  --color-danger: var(--palette-danger);
   --color-image-outline: oklch(1 0 0 / 0.1);
+  --shadow-border:
+    0 0 0 1px oklch(0 0 0 / 0.06),
+    0 1px 2px -1px oklch(0 0 0 / 0.12),
+    0 8px 24px -8px oklch(0 0 0 / 0.28);
 
   --radius-control: 6px;
   --radius-well: 12px;
 }
 
+:root,
+.theme-inverse {
+  --color-bg-page: var(--palette-page);
+  --color-text: var(--palette-ink);
+  --color-text-muted: color-mix(in oklab, var(--palette-ink) 90%, var(--palette-page));
+  --color-border: color-mix(in oklab, var(--palette-ink) 62%, var(--palette-page));
+  --color-bg-surface: color-mix(in oklab, var(--palette-ink) 8%, var(--palette-page));
+  --color-accent-hover: color-mix(in oklab, var(--palette-accent) 82%, var(--palette-ink));
+  --color-on-accent: var(--palette-on-accent);
+}
+
+.theme-inverse {
+  --palette-page: #ede9e6;
+  --palette-ink: #5c4f4a;
+  --palette-accent: #5c4f4a;
+  --palette-on-accent: #ede9e6;
+  --color-accent-hover: color-mix(in oklab, #5c4f4a 82%, var(--palette-brand));
+  --palette-danger: #8a2f28;
+  --color-danger: var(--palette-danger);
+  --color-image-outline: oklch(0 0 0 / 0.1);
+  color-scheme: light;
+}
+
 @theme inline {
   --font-sans: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --color-page: var(--palette-page);
-  --color-surface: var(--color-bg-surface);
+  --color-surface: color-mix(in oklab, var(--palette-ink) 8%, var(--palette-page));
   --color-ink: var(--palette-ink);
-  --color-muted: var(--color-text-muted);
+  --color-muted: color-mix(in oklab, var(--palette-ink) 90%, var(--palette-page));
   --color-accent: var(--palette-accent);
-  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-hover: color-mix(in oklab, var(--palette-accent) 82%, var(--palette-ink));
   --color-on-accent: var(--palette-on-accent);
+  --color-brand: var(--palette-brand);
   --color-border: color-mix(in oklab, var(--palette-ink) 62%, var(--palette-page));
-  --color-danger: #f3c4bc;
+  --color-danger: var(--palette-danger);
   --radius-control: 6px;
   --radius-well: 12px;
   --text-caption: var(--step--1);
@@ -100,6 +123,20 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+button:not(:disabled),
+[type="button"]:not(:disabled),
+[type="submit"]:not(:disabled),
+[type="reset"]:not(:disabled),
+a[href],
+label,
+summary {
+  cursor: pointer;
+}
+
+:disabled {
+  cursor: not-allowed;
 }
 
 @media (prefers-reduced-motion: reduce) {
