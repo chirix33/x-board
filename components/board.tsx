@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ClipboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ClipboardEvent as ReactClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/button";
@@ -75,7 +75,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
   }, [draft]);
 
   useEffect(() => {
-    const onPaste = (event: ClipboardEvent) => {
+    const onPaste = (event: globalThis.ClipboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
         return;
@@ -313,7 +313,10 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
                   {clip.kind === "text" && clip.text ? (
                     <p
                       className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body"
-                      onCopy={(event) => copyStoredText(event, clip.text)}
+                      onCopy={(event) => {
+                        const text = clip.text;
+                        if (text) copyStoredText(event, text);
+                      }}
                     >
                       {truncateDisplayText(clip.text)}
                     </p>
@@ -350,7 +353,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
   );
 }
 
-function copyStoredText(event: ClipboardEvent<HTMLParagraphElement>, text: string) {
+function copyStoredText(event: ReactClipboardEvent<HTMLParagraphElement>, text: string) {
   event.preventDefault();
   event.clipboardData.setData("text/plain", text);
 }
