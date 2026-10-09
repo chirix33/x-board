@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/button";
@@ -257,7 +257,10 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           className="flex min-h-40 flex-col justify-center rounded-[var(--radius-well)] border border-border bg-surface p-s"
         >
           {draft?.kind === "text" ? (
-            <p className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body">
+            <p
+              className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body"
+              onCopy={(event) => copyStoredText(event, draft.text)}
+            >
               {truncateDisplayText(draft.text)}
             </p>
           ) : draft?.kind === "image" ? (
@@ -308,7 +311,10 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
               >
                 <div className="min-w-0 flex-1">
                   {clip.kind === "text" && clip.text ? (
-                    <p className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body">
+                    <p
+                      className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body"
+                      onCopy={(event) => copyStoredText(event, clip.text)}
+                    >
                       {truncateDisplayText(clip.text)}
                     </p>
                   ) : clip.imageUrl ? (
@@ -342,6 +348,11 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
       </div>
     </div>
   );
+}
+
+function copyStoredText(event: ClipboardEvent<HTMLParagraphElement>, text: string) {
+  event.preventDefault();
+  event.clipboardData.setData("text/plain", text);
 }
 
 function textToDataTransfer(text: string) {
