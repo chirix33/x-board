@@ -24,7 +24,7 @@ export function CopyButton({
     <div className="flex flex-col items-end gap-3xs">
       <Button
         type="button"
-        variant="outline"
+        variant={copied ? "brand" : "outline"}
         aria-label={copied ? "Copied" : label}
         onClick={async () => {
           setError(null);

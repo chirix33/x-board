@@ -217,25 +217,30 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[42rem] flex-col px-s-m py-l">
-      <header className="flex flex-wrap items-center justify-between gap-s">
-        <h1 className="text-title font-semibold tracking-[-0.015em] text-balance">
-          X Board
-        </h1>
-        <div className="flex min-w-0 items-center gap-xs">
-          <p className="truncate text-caption text-muted">{email}</p>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={async () => {
-              await authClient.signOut();
-              router.replace("/sign-in");
-              router.refresh();
-            }}
-          >
-            Sign out
-          </Button>
-        </div>
-      </header>
+      <div className="theme-inverse flex flex-col rounded-[var(--radius-well)] border border-transparent bg-page p-l text-ink shadow-[var(--shadow-border)]">
+        <div
+          aria-hidden="true"
+          className="mb-s h-1 w-12 rounded-full bg-brand"
+        />
+        <header className="flex flex-wrap items-center justify-between gap-s">
+          <h1 className="text-title font-semibold tracking-[-0.015em] text-balance">
+            X Board
+          </h1>
+          <div className="flex min-w-0 items-center gap-xs">
+            <p className="truncate text-caption text-muted">{email}</p>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={async () => {
+                await authClient.signOut();
+                router.replace("/sign-in");
+                router.refresh();
+              }}
+            >
+              Sign out
+            </Button>
+          </div>
+        </header>
 
       <section className="mt-l flex flex-col gap-s">
         <h2 className="text-section font-medium">Paste</h2>
@@ -334,6 +339,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           </ul>
         )}
       </section>
+      </div>
     </div>
   );
 }

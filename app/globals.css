@@ -34,6 +34,7 @@
   --palette-accent: #c9996b;
   --palette-on-accent: #2a211e;
   --palette-brand: #c9996b;
+  --palette-on-brand: #2a211e;
   --palette-danger: #f3c4bc;
   --color-danger: var(--palette-danger);
   --color-image-outline: oklch(1 0 0 / 0.1);
@@ -79,6 +80,8 @@
   --color-accent-hover: color-mix(in oklab, var(--palette-accent) 82%, var(--palette-ink));
   --color-on-accent: var(--palette-on-accent);
   --color-brand: var(--palette-brand);
+  --color-on-brand: var(--palette-on-brand);
+  --color-brand-hover: color-mix(in oklab, var(--palette-brand) 82%, var(--palette-on-brand));
   --color-border: color-mix(in oklab, var(--palette-ink) 62%, var(--palette-page));
   --color-danger: var(--palette-danger);
   --radius-control: 6px;
