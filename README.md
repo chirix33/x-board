@@ -23,6 +23,13 @@ npm run dev
 
 Open http://localhost:3000, sign in, then open the same URL on the other machine.
 
+To install it like a desktop app, open the site in Edge or Chrome, then:
+
+- **Edge:** `…` → **Apps** → **Install this site as an app**
+- **Chrome:** `⋮` → **Cast, save, and share** → **Install page as app** (wording varies)
+
+That adds X Board to the Start menu. Pin it to the taskbar if you want it always visible.
+
 Seed emails come from `SEED_EMAIL` and `SEED_EMAIL_2` in `.env.local`. Change those passwords before sharing the board.
 
 To add another account (skipped if the email already exists):

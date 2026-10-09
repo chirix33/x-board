@@ -10,7 +10,13 @@ const bricolage = Bricolage_Grotesque({
 
 export const metadata: Metadata = {
   title: "X Board",
+  applicationName: "X Board",
   description: "Move copied text and images between your machines.",
+  appleWebApp: {
+    capable: true,
+    title: "X Board",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
@@ -24,7 +30,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${bricolage.variable} h-full antialiased`}>
-      <meta name="apple-mobile-web-app-title" content="X Board" />
       <body className="min-h-dvh bg-page font-sans text-ink">{children}</body>
     </html>
   );
