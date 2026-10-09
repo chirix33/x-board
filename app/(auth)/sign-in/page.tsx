@@ -1,3 +1,4 @@
+import { DevelopedBy } from "@/components/developed-by";
 import { SignInForm } from "@/components/sign-in-form";
 
 export default function SignInPage() {
@@ -20,6 +21,9 @@ export default function SignInPage() {
           <SignInForm />
         </div>
       </section>
+      <div className="mt-l">
+        <DevelopedBy />
+      </div>
     </main>
   );
 }

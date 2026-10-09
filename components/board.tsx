@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/button";
+import { DevelopedBy } from "@/components/developed-by";
 import { CopyButton } from "@/components/copy-button";
 import type { ClipDto } from "@/lib/clips";
 import { CLIP_LIST_LIMIT, POLL_INTERVAL_MS, truncateDisplayText } from "@/lib/constants";
@@ -363,6 +364,9 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           </ul>
         )}
       </section>
+      </div>
+      <div className="mt-auto flex justify-center pt-l">
+        <DevelopedBy />
       </div>
     </div>
   );
