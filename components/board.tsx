@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ClipboardEvent as ReactClipboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent as ReactClipboardEvent,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/button";
@@ -8,6 +15,7 @@ import { CopyButton } from "@/components/copy-button";
 import type { ClipDto } from "@/lib/clips";
 import { CLIP_LIST_LIMIT, POLL_INTERVAL_MS, truncateDisplayText } from "@/lib/constants";
 import {
+  IMAGE_TYPE_ERROR,
   copyImage,
   copyText,
   draftFromClipboardData,
@@ -39,7 +47,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
   const router = useRouter();
   const wellRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ReactNode>(null);
   const [sending, setSending] = useState(false);
   const [clips, setClips] = useState<ClipDto[]>(initialClips);
   const newestId = clips[0]?.id;
@@ -52,14 +60,14 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
   }, []);
 
   const applyClipboard = useCallback(
-    (data: DataTransfer | null) => {
-      const result = draftFromClipboardData(data);
+    async (data: DataTransfer | null) => {
+      const result = await draftFromClipboardData(data);
       if (!result) {
         setError("Nothing to paste");
         return;
       }
       if ("error" in result) {
-        setError(result.error);
+        setError(formatBoardError(result.error));
         return;
       }
       setError(null);
@@ -81,7 +89,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
         return;
       }
       event.preventDefault();
-      applyClipboard(event.clipboardData);
+      void applyClipboard(event.clipboardData);
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
@@ -128,20 +136,25 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           if (imageType) {
             const blob = await item.getType(imageType);
             const file = new File([blob], "paste", { type: blob.type });
-            applyClipboard(objectToDataTransfer(file));
+            void applyClipboard(objectToDataTransfer(file));
             return;
           }
           if (item.types.includes("text/plain")) {
             const text = await (await item.getType("text/plain")).text();
-            applyClipboard(textToDataTransfer(text));
+            void applyClipboard(textToDataTransfer(text));
             return;
           }
         }
       }
       const text = await navigator.clipboard.readText();
-      applyClipboard(textToDataTransfer(text));
+      void applyClipboard(textToDataTransfer(text));
     } catch {
-      setError("Use Ctrl+V to paste an image, or copy text and try again");
+      setError(
+        <>
+          This browser cannot read the clipboard from a button. Paste with{" "}
+          <strong>Ctrl+V</strong> or <strong>⌘V</strong> instead.
+        </>,
+      );
     }
   }
 
@@ -163,7 +176,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           body: JSON.stringify({ id, kind: "text", text: draft.text }),
         });
         if (!response.ok) {
-          setError(await readError(response));
+          setError(formatBoardError(await readError(response)));
           return;
         }
       } else {
@@ -176,7 +189,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           }),
         });
         if (!urlResponse.ok) {
-          setError(await readError(urlResponse));
+          setError(formatBoardError(await readError(urlResponse)));
           return;
         }
         const { objectKey, uploadUrl } = (await urlResponse.json()) as {
@@ -204,7 +217,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           }),
         });
         if (!confirm.ok) {
-          setError(await readError(confirm));
+          setError(formatBoardError(await readError(confirm)));
           return;
         }
       }
@@ -252,7 +265,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           }}
           onDrop={(event) => {
             event.preventDefault();
-            applyClipboard(event.dataTransfer);
+            void applyClipboard(event.dataTransfer);
           }}
           className="flex min-h-40 flex-col justify-center rounded-[var(--radius-well)] border border-border bg-surface p-s"
         >
@@ -271,7 +284,9 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
               className="max-h-80 w-max max-w-full rounded-[6px] outline outline-offset-[-1px] outline-[var(--color-image-outline)]"
             />
           ) : (
-            <p className="text-body text-muted">Ctrl+V to place text or an image.</p>
+            <p className="text-body text-muted">
+              Paste with <strong>Ctrl+V</strong> or <strong>⌘V</strong>.
+            </p>
           )}
         </div>
         {error ? (
@@ -298,7 +313,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
         <h2 className="text-section font-medium">Board</h2>
         {clips.length === 0 ? (
           <p className="text-body text-muted">
-            Nothing on the board yet. Send from the other machine, or paste above.
+            Nothing on the board yet. <strong>Send</strong> from the other machine, or paste above.
           </p>
         ) : (
           <ul className="flex flex-col">
@@ -351,6 +366,26 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
       </div>
     </div>
   );
+}
+
+function formatBoardError(message: string): ReactNode {
+  if (message === IMAGE_TYPE_ERROR || message === "Use PNG, JPEG, WebP, or GIF") {
+    return (
+      <>
+        This browser cannot read that image. Use <strong>PNG</strong>, <strong>JPEG</strong>,{" "}
+        <strong>WebP</strong>, or <strong>GIF</strong>.
+      </>
+    );
+  }
+  const sizeMatch = message.match(/^(Text|Image) is (.+); the limit is (.+)$/);
+  if (sizeMatch) {
+    return (
+      <>
+        {sizeMatch[1]} is {sizeMatch[2]}; the limit is <strong>{sizeMatch[3]}</strong>.
+      </>
+    );
+  }
+  return message;
 }
 
 function copyStoredText(event: ReactClipboardEvent<HTMLParagraphElement>, text: string) {

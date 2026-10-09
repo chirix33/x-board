@@ -4,6 +4,8 @@ export type Draft =
   | { kind: "text"; text: string }
   | { kind: "image"; file: File; previewUrl: string };
 
+export const IMAGE_TYPE_ERROR = "IMAGE_TYPE";
+
 export function validateText(text: string) {
   const trimmed = text;
   if (!trimmed) return "Paste some text first";
@@ -16,7 +18,7 @@ export function validateText(text: string) {
 
 export function validateImage(file: File) {
   if (!isAllowedImageType(file.type)) {
-    return "Use PNG, JPEG, WebP, or GIF";
+    return IMAGE_TYPE_ERROR;
   }
   if (file.size > IMAGE_MAX_BYTES) {
     return `Image is ${formatBytes(file.size)}; the limit is ${formatBytes(IMAGE_MAX_BYTES)}`;
@@ -44,6 +46,33 @@ export async function blobToPng(blob: Blob) {
   return png;
 }
 
+async function normalizeImageFile(file: File): Promise<File | { error: string }> {
+  if (isAllowedImageType(file.type)) {
+    if (file.size > IMAGE_MAX_BYTES) {
+      return {
+        error: `Image is ${formatBytes(file.size)}; the limit is ${formatBytes(IMAGE_MAX_BYTES)}`,
+      };
+    }
+    return file;
+  }
+
+  if (file.type && !file.type.startsWith("image/")) {
+    return { error: IMAGE_TYPE_ERROR };
+  }
+
+  try {
+    const png = await blobToPng(file);
+    if (png.size > IMAGE_MAX_BYTES) {
+      return {
+        error: `Image is ${formatBytes(png.size)}; the limit is ${formatBytes(IMAGE_MAX_BYTES)}`,
+      };
+    }
+    return new File([png], "paste.png", { type: "image/png" });
+  } catch {
+    return { error: IMAGE_TYPE_ERROR };
+  }
+}
+
 export async function copyText(text: string) {
   await navigator.clipboard.writeText(text);
 }
@@ -61,24 +90,26 @@ export async function copyImage(url: string) {
   ]);
 }
 
-export function draftFromClipboardData(data: DataTransfer | null): Draft | { error: string } | null {
+export async function draftFromClipboardData(
+  data: DataTransfer | null,
+): Promise<Draft | { error: string } | null> {
   if (!data) return null;
 
   const imageItem = [...data.items].find((item) => item.type.startsWith("image/"));
   if (imageItem) {
     const file = imageItem.getAsFile();
     if (!file) return { error: "Could not read that image" };
-    const error = validateImage(file);
-    if (error) return { error };
-    return { kind: "image", file, previewUrl: URL.createObjectURL(file) };
+    const normalized = await normalizeImageFile(file);
+    if ("error" in normalized) return normalized;
+    return { kind: "image", file: normalized, previewUrl: URL.createObjectURL(normalized) };
   }
 
   if (data.files.length > 0) {
     const file = data.files[0];
-    if (file.type.startsWith("image/")) {
-      const error = validateImage(file);
-      if (error) return { error };
-      return { kind: "image", file, previewUrl: URL.createObjectURL(file) };
+    if (file.type.startsWith("image/") || !file.type) {
+      const normalized = await normalizeImageFile(file);
+      if ("error" in normalized) return normalized;
+      return { kind: "image", file: normalized, previewUrl: URL.createObjectURL(normalized) };
     }
   }
 
