@@ -29,32 +29,35 @@
   --space-2xl-3xl: clamp(4rem, 2.875rem + 5vw, 6.75rem);
   --space-s-l: clamp(1rem, 0.4886rem + 2.2727vw, 2.25rem);
 
-  --palette-page: #fcf0da;
-  --palette-ink: #4c4541;
-  --palette-accent: #aeac78;
+  --palette-page: #5c4f4a;
+  --palette-ink: #ede9e6;
+  --palette-accent: #c9996b;
+  --palette-on-accent: #2a211e;
   --color-bg-page: var(--palette-page);
   --color-text: var(--palette-ink);
-  --color-text-muted: color-mix(in oklab, var(--palette-ink) 68%, var(--palette-page));
-  --color-border: color-mix(in oklab, var(--palette-ink) 18%, var(--palette-page));
-  --color-bg-surface: color-mix(in oklab, var(--palette-ink) 6%, var(--palette-page));
+  --color-text-muted: color-mix(in oklab, var(--palette-ink) 82%, var(--palette-page));
+  --color-border: color-mix(in oklab, var(--palette-ink) 62%, var(--palette-page));
+  --color-bg-surface: color-mix(in oklab, var(--palette-ink) 8%, var(--palette-page));
   --color-accent-hover: color-mix(in oklab, var(--palette-accent) 82%, var(--palette-ink));
-  --color-danger: #8a2f28;
-  --color-image-outline: oklch(0 0 0 / 0.1);
+  --color-on-accent: var(--palette-on-accent);
+  --color-danger: #f3c4bc;
+  --color-image-outline: oklch(1 0 0 / 0.1);
 
   --radius-control: 6px;
   --radius-well: 12px;
 }
 
 @theme inline {
-  --font-sans: var(--font-clarity-city), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --color-page: var(--palette-page);
   --color-surface: var(--color-bg-surface);
   --color-ink: var(--palette-ink);
   --color-muted: var(--color-text-muted);
   --color-accent: var(--palette-accent);
   --color-accent-hover: var(--color-accent-hover);
-  --color-border: var(--color-border);
-  --color-danger: var(--color-danger);
+  --color-on-accent: var(--palette-on-accent);
+  --color-border: color-mix(in oklab, var(--palette-ink) 62%, var(--palette-page));
+  --color-danger: #f3c4bc;
   --radius-control: 6px;
   --radius-well: 12px;
   --text-caption: var(--step--1);
@@ -77,6 +80,7 @@
 
 html {
   background: var(--color-bg-page);
+  color-scheme: dark;
 }
 
 body {
@@ -90,7 +94,7 @@ body {
 
 ::selection {
   background: var(--color-accent);
-  color: var(--color-text);
+  color: var(--color-on-accent);
 }
 
 :focus-visible {

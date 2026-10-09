@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
+import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 
-const clarityCity = localFont({
-  src: "../fonts/ClarityCity.woff2",
-  variable: "--font-clarity-city",
-  weight: "400 600",
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
   display: "swap",
 });
 
@@ -14,13 +13,17 @@ export const metadata: Metadata = {
   description: "Move copied text and images between your machines.",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#5C4F4A",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${clarityCity.variable} h-full antialiased`}>
+    <html lang="en" className={`${bricolage.variable} h-full antialiased`}>
       <meta name="apple-mobile-web-app-title" content="X Board" />
       <body className="min-h-dvh bg-page font-sans text-ink">{children}</body>
     </html>
