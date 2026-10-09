@@ -324,8 +324,8 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
                       await copyText(clip.text);
                       return;
                     }
-                    if (clip.imageUrl) {
-                      await copyImage(clip.imageUrl);
+                    if (clip.kind === "image") {
+                      await copyImage(`/api/clips/${clip.id}/file`);
                     }
                   }}
                 />

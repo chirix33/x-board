@@ -6,10 +6,10 @@
           "http://localhost:3000",
           "https://x-board-alpha.vercel.app"
         ],
-        "methods": ["GET", "PUT", "HEAD"],
+        "methods": ["GET", "PUT", "HEAD", "OPTIONS"],
         "headers": ["*"]
       },
-      "exposeHeaders": ["ETag"],
+      "exposeHeaders": ["ETag", "Content-Type", "Content-Length"],
       "maxAgeSeconds": 3600
     }
   ]

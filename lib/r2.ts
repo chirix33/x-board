@@ -22,6 +22,8 @@ function getClient() {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
   return client;
 }
@@ -51,6 +53,15 @@ export async function createDownloadUrl(objectKey: string) {
       Key: objectKey,
     }),
     { expiresIn: DOWNLOAD_URL_TTL_SECONDS },
+  );
+}
+
+export async function getObject(objectKey: string) {
+  return getClient().send(
+    new GetObjectCommand({
+      Bucket: bucket(),
+      Key: objectKey,
+    }),
   );
 }
 
