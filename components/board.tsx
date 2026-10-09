@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/button";
 import { CopyButton } from "@/components/copy-button";
 import type { ClipDto } from "@/lib/clips";
-import { CLIP_LIST_LIMIT, POLL_INTERVAL_MS } from "@/lib/constants";
+import { CLIP_LIST_LIMIT, POLL_INTERVAL_MS, truncateDisplayText } from "@/lib/constants";
 import {
   copyImage,
   copyText,
@@ -253,7 +253,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
         >
           {draft?.kind === "text" ? (
             <p className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body">
-              {draft.text}
+              {truncateDisplayText(draft.text)}
             </p>
           ) : draft?.kind === "image" ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -304,7 +304,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
                 <div className="min-w-0 flex-1">
                   {clip.kind === "text" && clip.text ? (
                     <p className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body">
-                      {clip.text}
+                      {truncateDisplayText(clip.text)}
                     </p>
                   ) : clip.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
