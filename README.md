@@ -25,9 +25,18 @@ Open http://localhost:3000, sign in, then open the same URL on the other machine
 
 Seed emails come from `SEED_EMAIL` and `SEED_EMAIL_2` in `.env.local`. Change those passwords before sharing the board.
 
+To add another account (skipped if the email already exists):
+
+```bash
+./scripts/create-account.sh you@example.com 'your-password'
+./scripts/update-password.sh you@example.com 'new-password'
+```
+
 ## Scripts
 
 - `npm run dev` — local app
 - `npm run db:push` — apply Drizzle schema to Neon
 - `npm run db:seed` — create the two accounts from `SEED_EMAIL` / `SEED_PASSWORD`
+- `./scripts/create-account.sh <email> <password>` — create one account if it does not already exist
+- `./scripts/update-password.sh <email> <new-password>` — set a new password for an existing account
 - `npm run build` — production build
