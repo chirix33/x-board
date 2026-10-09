@@ -6,7 +6,7 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = getSessionCookie(request);
 
-  if (pathname.startsWith("/sign-in")) {
+  if (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up")) {
     if (sessionCookie) {
       return NextResponse.redirect(new URL("/", request.url));
     }
