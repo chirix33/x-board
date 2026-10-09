@@ -21,6 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${clarityCity.variable} h-full antialiased`}>
+      <meta name="apple-mobile-web-app-title" content="X Board" />
       <body className="min-h-dvh bg-page font-sans text-ink">{children}</body>
     </html>
   );

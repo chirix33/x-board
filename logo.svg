@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+
+<defs><filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="9.216" stdDeviation="40.550399999999996" flood-color="#000000" flood-opacity="0.41"/></filter><clipPath id="iconShape"><rect x="0" y="0" width="512" height="512" rx="35.84"/></clipPath><filter id="shineBlur" x="-30%" y="-80%" width="160%" height="240%"><feGaussianBlur stdDeviation="9.216"/></filter><radialGradient id="shineCenter"><stop stop-color="#ffffff" stop-opacity=".98"/><stop offset=".42" stop-color="#ffffff" stop-opacity=".62"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient><radialGradient id="shineSide"><stop stop-color="#ffffff" stop-opacity=".78"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs>
+
+
+<rect x="0" y="0" width="512" height="512" rx="35.84" fill="#fcf0da" stroke="#ffffff" stroke-width="0" filter="url(#shadow)"/>
+
+<g transform="translate(74.24000000000001 74.24000000000001) scale(15.146666666666667) rotate(87 12 12)" color="#aeac78" fill="none" stroke="#aeac78" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="1"><path d="M19.4 20H9.6C9.26863 20 9 19.7314 9 19.4V9.6C9 9.26863 9.26863 9 9.6 9H19.4C19.7314 9 20 9.26863 20 9.6V19.4C20 19.7314 19.7314 20 19.4 20Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M15 9V4.6C15 4.26863 14.7314 4 14.4 4H4.6C4.26863 4 4 4.26863 4 4.6V14.4C4 14.7314 4.26863 15 4.6 15H9" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></g>
+
+<g clip-path="url(#iconShape)" opacity="0.89" filter="url(#shineBlur)"><ellipse cx="256" cy="9.216" rx="70.313984" ry="102.4" fill="url(#shineCenter)"/><ellipse cx="151.3728" cy="6.144" rx="42.372096" ry="76.80000000000001" fill="url(#shineSide)"/><ellipse cx="360.6272" cy="6.144" rx="42.372096" ry="76.80000000000001" fill="url(#shineSide)"/></g>
+
+
+</svg>
