@@ -50,12 +50,32 @@ export function SignUpForm({ token }: { token: string }) {
 
   const errorId = "sign-up-error";
 
+  async function pasteInto(setValue: (value: string) => void) {
+    setError(null);
+    setCreatedWithoutSession(false);
+    try {
+      const text = (await navigator.clipboard.readText()).trim();
+      if (!text) {
+        setError("Nothing to paste");
+        return;
+      }
+      setValue(text);
+    } catch {
+      setError("Tap Allow Paste at the top of the screen, then press Paste again.");
+    }
+  }
+
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-s">
       <div className="flex flex-col gap-2xs">
-        <label className="text-body" htmlFor="sign-up-email">
-          Email
-        </label>
+        <div className="flex items-center justify-between gap-s">
+          <label className="text-body" htmlFor="sign-up-email">
+            Email
+          </label>
+          <Button type="button" variant="ghost" onClick={() => void pasteInto(setEmail)}>
+            Paste
+          </Button>
+        </div>
         <input
           id="sign-up-email"
           type="email"
@@ -70,9 +90,14 @@ export function SignUpForm({ token }: { token: string }) {
         />
       </div>
       <div className="flex flex-col gap-2xs">
-        <label className="text-body" htmlFor="sign-up-password">
-          Password
-        </label>
+        <div className="flex items-center justify-between gap-s">
+          <label className="text-body" htmlFor="sign-up-password">
+            Password
+          </label>
+          <Button type="button" variant="ghost" onClick={() => void pasteInto(setPassword)}>
+            Paste
+          </Button>
+        </div>
         <input
           id="sign-up-password"
           type="password"
@@ -88,9 +113,14 @@ export function SignUpForm({ token }: { token: string }) {
         />
       </div>
       <div className="flex flex-col gap-2xs">
-        <label className="text-body" htmlFor="sign-up-confirm">
-          Confirm password
-        </label>
+        <div className="flex items-center justify-between gap-s">
+          <label className="text-body" htmlFor="sign-up-confirm">
+            Confirm password
+          </label>
+          <Button type="button" variant="ghost" onClick={() => void pasteInto(setConfirmPassword)}>
+            Paste
+          </Button>
+        </div>
         <input
           id="sign-up-confirm"
           type="password"

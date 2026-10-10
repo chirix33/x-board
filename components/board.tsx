@@ -159,7 +159,7 @@ export function Board({
       }
       setError("Nothing to paste");
     } catch {
-      setError("Could not read the clipboard. Long-press the text field and choose Paste.");
+      setError("Tap Allow Paste at the top of the screen, then press Paste again.");
     }
   }
 
@@ -258,7 +258,7 @@ export function Board({
                 event.preventDefault();
                 void applyClipboard(event.clipboardData);
               }}
-              className="min-h-40 w-full resize-none bg-transparent text-body text-ink outline-none [-webkit-user-select:text] placeholder:text-muted"
+              className="min-h-40 w-full resize-none bg-transparent text-ink placeholder:text-muted"
             />
           )}
         </div>
