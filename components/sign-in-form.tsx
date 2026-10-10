@@ -4,8 +4,9 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/button";
+import { safeNext } from "@/lib/safe-next";
 
-export function SignInForm() {
+export function SignInForm({ nextPath }: { nextPath?: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +26,7 @@ export function SignInForm() {
       setError("Wrong email or password");
       return;
     }
-    router.replace("/");
+    router.replace(safeNext(nextPath) ?? "/");
     router.refresh();
   }
 

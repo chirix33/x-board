@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
+import { RegisterServiceWorker } from "@/components/register-service-worker";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#5C4F4A",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -30,7 +32,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${bricolage.variable} h-full antialiased`}>
-      <body className="min-h-dvh bg-page font-sans text-ink">{children}</body>
+      <body className="min-h-dvh bg-page pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] font-sans text-ink">
+        <RegisterServiceWorker />
+        {children}
+      </body>
     </html>
   );
 }
