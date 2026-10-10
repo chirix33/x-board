@@ -52,8 +52,10 @@ export function SignUpForm({ token }: { token: string }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-s">
-      <label className="flex flex-col gap-2xs text-body" htmlFor="sign-up-email">
-        Email
+      <div className="flex flex-col gap-2xs">
+        <label className="text-body" htmlFor="sign-up-email">
+          Email
+        </label>
         <input
           id="sign-up-email"
           type="email"
@@ -66,9 +68,11 @@ export function SignUpForm({ token }: { token: string }) {
           aria-describedby={error ? errorId : undefined}
           className="min-h-11 rounded-[var(--radius-control)] border border-border bg-surface px-xs text-body text-ink"
         />
-      </label>
-      <label className="flex flex-col gap-2xs text-body" htmlFor="sign-up-password">
-        Password
+      </div>
+      <div className="flex flex-col gap-2xs">
+        <label className="text-body" htmlFor="sign-up-password">
+          Password
+        </label>
         <input
           id="sign-up-password"
           type="password"
@@ -82,9 +86,11 @@ export function SignUpForm({ token }: { token: string }) {
           aria-describedby={error ? errorId : undefined}
           className="min-h-11 rounded-[var(--radius-control)] border border-border bg-surface px-xs text-body text-ink"
         />
-      </label>
-      <label className="flex flex-col gap-2xs text-body" htmlFor="sign-up-confirm">
-        Confirm password
+      </div>
+      <div className="flex flex-col gap-2xs">
+        <label className="text-body" htmlFor="sign-up-confirm">
+          Confirm password
+        </label>
         <input
           id="sign-up-confirm"
           type="password"
@@ -98,7 +104,7 @@ export function SignUpForm({ token }: { token: string }) {
           aria-describedby={error ? errorId : undefined}
           className="min-h-11 rounded-[var(--radius-control)] border border-border bg-surface px-xs text-body text-ink"
         />
-      </label>
+      </div>
       {createdWithoutSession ? (
         <p id={errorId} className="text-body text-danger" role="alert">
           Account created. Sign in failed.{" "}

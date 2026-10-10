@@ -4,8 +4,9 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/button";
+import { safeNext } from "@/lib/safe-next";
 
-export function SignInForm() {
+export function SignInForm({ nextPath }: { nextPath?: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +26,7 @@ export function SignInForm() {
       setError("Wrong email or password");
       return;
     }
-    router.replace("/");
+    router.replace(safeNext(nextPath) ?? "/");
     router.refresh();
   }
 
@@ -33,8 +34,10 @@ export function SignInForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-s">
-      <label className="flex flex-col gap-2xs text-body" htmlFor="sign-in-email">
-        Email
+      <div className="flex flex-col gap-2xs">
+        <label className="text-body" htmlFor="sign-in-email">
+          Email
+        </label>
         <input
           id="sign-in-email"
           type="email"
@@ -47,9 +50,11 @@ export function SignInForm() {
           aria-describedby={error ? errorId : undefined}
           className="min-h-11 rounded-[var(--radius-control)] border border-border bg-surface px-xs text-body text-ink"
         />
-      </label>
-      <label className="flex flex-col gap-2xs text-body" htmlFor="sign-in-password">
-        Password
+      </div>
+      <div className="flex flex-col gap-2xs">
+        <label className="text-body" htmlFor="sign-in-password">
+          Password
+        </label>
         <input
           id="sign-in-password"
           type="password"
@@ -62,7 +67,7 @@ export function SignInForm() {
           aria-describedby={error ? errorId : undefined}
           className="min-h-11 rounded-[var(--radius-control)] border border-border bg-surface px-xs text-body text-ink"
         />
-      </label>
+      </div>
       {error ? (
         <p id={errorId} className="text-body text-danger" role="alert">
           {error}

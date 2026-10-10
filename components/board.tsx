@@ -3,7 +3,9 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
+  type ChangeEvent,
   type ClipboardEvent as ReactClipboardEvent,
   type ReactNode,
 } from "react";
@@ -17,11 +19,14 @@ import { CLIP_LIST_LIMIT, POLL_INTERVAL_MS, truncateDisplayText } from "@/lib/co
 import {
   IMAGE_TYPE_ERROR,
   copyImage,
+  copyOrShareText,
   copyText,
   draftFromClipboardData,
-  validateText,
+  draftFromFile,
+  presentImage,
   type Draft,
 } from "@/lib/clipboard";
+import { sendDraft } from "@/lib/send-clip";
 
 function formatRelative(iso: string) {
   const deltaSeconds = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
@@ -34,17 +39,17 @@ function formatRelative(iso: string) {
   return formatter.format(-Math.round(hours / 24), "day");
 }
 
-async function readError(response: Response) {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error ?? "Something went wrong";
-  } catch {
-    return "Something went wrong";
-  }
-}
-
-export function Board({ email, initialClips }: { email: string; initialClips: ClipDto[] }) {
+export function Board({
+  email,
+  initialClips,
+  phone,
+}: {
+  email: string;
+  initialClips: ClipDto[];
+  phone: boolean;
+}) {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<ReactNode>(null);
   const [sending, setSending] = useState(false);
@@ -162,70 +167,30 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
     if (!draft || sending) return;
     setSending(true);
     setError(null);
-    const id = crypto.randomUUID();
     try {
-      if (draft.kind === "text") {
-        const invalid = validateText(draft.text);
-        if (invalid) {
-          setError(invalid);
-          return;
-        }
-        const response = await fetch("/api/clips", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, kind: "text", text: draft.text }),
-        });
-        if (!response.ok) {
-          setError(formatBoardError(await readError(response)));
-          return;
-        }
-      } else {
-        const urlResponse = await fetch("/api/clips/upload-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contentType: draft.file.type,
-            byteSize: draft.file.size,
-          }),
-        });
-        if (!urlResponse.ok) {
-          setError(formatBoardError(await readError(urlResponse)));
-          return;
-        }
-        const { objectKey, uploadUrl } = (await urlResponse.json()) as {
-          objectKey: string;
-          uploadUrl: string;
-        };
-        const uploaded = await fetch(uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": draft.file.type },
-          body: draft.file,
-        });
-        if (!uploaded.ok) {
-          setError("Could not upload the image");
-          return;
-        }
-        const confirm = await fetch("/api/clips", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id,
-            kind: "image",
-            objectKey,
-            contentType: draft.file.type,
-            byteSize: draft.file.size,
-          }),
-        });
-        if (!confirm.ok) {
-          setError(formatBoardError(await readError(confirm)));
-          return;
-        }
+      const invalid = await sendDraft(draft);
+      if (invalid) {
+        setError(formatBoardError(invalid));
+        return;
       }
       replaceDraft(null);
       await refresh();
     } finally {
       setSending(false);
     }
+  }
+
+  async function onPhoto(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const result = await draftFromFile(file);
+    if ("error" in result) {
+      setError(formatBoardError(result.error));
+      return;
+    }
+    setError(null);
+    replaceDraft(result);
   }
 
   return (
@@ -303,6 +268,20 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           </p>
         ) : null}
         <div className="flex justify-end gap-xs">
+          {phone ? (
+            <>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => void onPhoto(event)}
+              />
+              <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
+                Choose photo
+              </Button>
+            </>
+          ) : null}
           <Button type="button" variant="outline" onClick={() => void onPasteClick()}>
             Paste
           </Button>
@@ -358,11 +337,13 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
                 <CopyButton
                   onCopy={async () => {
                     if (clip.kind === "text" && clip.text) {
-                      await copyText(clip.text);
+                      if (phone) await copyOrShareText(clip.text);
+                      else await copyText(clip.text);
                       return;
                     }
                     if (clip.kind === "image") {
-                      await copyImage(`/api/clips/${clip.id}/file`);
+                      if (phone) await presentImage(`/api/clips/${clip.id}/file`);
+                      else await copyImage(`/api/clips/${clip.id}/file`);
                     }
                   }}
                 />

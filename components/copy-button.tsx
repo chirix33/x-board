@@ -31,7 +31,8 @@ export function CopyButton({
           try {
             await onCopy();
             setCopied(true);
-          } catch {
+          } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") return;
             setError("Could not copy");
           }
         }}

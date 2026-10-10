@@ -56,7 +56,11 @@ async function normalizeImageFile(file: File): Promise<File | { error: string }>
     return file;
   }
 
-  if (file.type && !file.type.startsWith("image/")) {
+  const convertible =
+    !file.type ||
+    file.type.startsWith("image/") ||
+    (file.type === "application/octet-stream" && /\.hei[cf]$/i.test(file.name));
+  if (!convertible) {
     return { error: IMAGE_TYPE_ERROR };
   }
 
@@ -75,6 +79,45 @@ async function normalizeImageFile(file: File): Promise<File | { error: string }>
 
 export async function copyText(text: string) {
   await navigator.clipboard.writeText(text);
+}
+
+export async function copyOrShareText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (error) {
+    if (typeof navigator.share === "function") {
+      await navigator.share({ text });
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function presentImage(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Could not load the image");
+  }
+  const png = await blobToPng(await response.blob());
+  const file = new File([png], "clip.png", { type: "image/png" });
+  if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+    await navigator.share({ files: [file] });
+    return;
+  }
+  const objectUrl = URL.createObjectURL(png);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = "clip.png";
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
+export async function draftFromFile(file: File): Promise<Draft | { error: string }> {
+  const normalized = await normalizeImageFile(file);
+  if ("error" in normalized) return normalized;
+  return { kind: "image", file: normalized, previewUrl: URL.createObjectURL(normalized) };
 }
 
 export async function copyImage(url: string) {
