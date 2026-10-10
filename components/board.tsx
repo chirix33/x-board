@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useRef,
   useState,
   type ClipboardEvent as ReactClipboardEvent,
   type ReactNode,
@@ -46,7 +45,6 @@ async function readError(response: Response) {
 
 export function Board({ email, initialClips }: { email: string; initialClips: ClipDto[] }) {
   const router = useRouter();
-  const wellRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<ReactNode>(null);
   const [sending, setSending] = useState(false);
@@ -130,32 +128,33 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
   async function onPasteClick() {
     setError(null);
     try {
-      if (navigator.clipboard.read) {
-        const items = await navigator.clipboard.read();
-        for (const item of items) {
-          const imageType = item.types.find((type) => type.startsWith("image/"));
-          if (imageType) {
-            const blob = await item.getType(imageType);
-            const file = new File([blob], "paste", { type: blob.type });
-            void applyClipboard(objectToDataTransfer(file));
-            return;
-          }
-          if (item.types.includes("text/plain")) {
-            const text = await (await item.getType("text/plain")).text();
-            void applyClipboard(textToDataTransfer(text));
-            return;
-          }
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        await applyClipboard(textToDataTransfer(text));
+        return;
+      }
+    } catch {
+      // An image-only clipboard cannot be read as text. Try the image path below.
+    }
+
+    try {
+      if (!navigator.clipboard.read) {
+        setError("Nothing to paste");
+        return;
+      }
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const imageType = item.types.find((type) => type.startsWith("image/"));
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          const file = new File([blob], "paste", { type: blob.type });
+          await applyClipboard(objectToDataTransfer(file));
+          return;
         }
       }
-      const text = await navigator.clipboard.readText();
-      void applyClipboard(textToDataTransfer(text));
+      setError("Nothing to paste");
     } catch {
-      setError(
-        <>
-          This browser cannot read the clipboard from a button. Paste with{" "}
-          <strong>Ctrl+V</strong> or <strong>⌘V</strong> instead.
-        </>,
-      );
+      setError("Could not read the clipboard. Long-press the text field and choose Paste.");
     }
   }
 
@@ -259,8 +258,6 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
       <section className="mt-l flex flex-col gap-s">
         <h2 className="text-section font-medium">Paste</h2>
         <div
-          ref={wellRef}
-          tabIndex={0}
           onDragOver={(event) => {
             event.preventDefault();
           }}
@@ -270,14 +267,7 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           }}
           className="flex min-h-40 flex-col justify-center rounded-[var(--radius-well)] border border-border bg-surface p-s"
         >
-          {draft?.kind === "text" ? (
-            <p
-              className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body"
-              onCopy={(event) => copyStoredText(event, draft.text)}
-            >
-              {truncateDisplayText(draft.text)}
-            </p>
-          ) : draft?.kind === "image" ? (
+          {draft?.kind === "image" ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={draft.previewUrl}
@@ -285,9 +275,26 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
               className="max-h-80 w-max max-w-full rounded-[6px] outline outline-offset-[-1px] outline-[var(--color-image-outline)]"
             />
           ) : (
-            <p className="text-body text-muted">
-              Paste with <strong>Ctrl+V</strong> or <strong>⌘V</strong>.
-            </p>
+            <textarea
+              value={draft?.kind === "text" ? draft.text : ""}
+              placeholder="Paste text here."
+              rows={6}
+              autoComplete="off"
+              onChange={(event) => {
+                const text = event.target.value;
+                if (!text) {
+                  replaceDraft(null);
+                  return;
+                }
+                replaceDraft({ kind: "text", text });
+              }}
+              onPaste={(event) => {
+                if (!pasteHasImage(event.clipboardData)) return;
+                event.preventDefault();
+                void applyClipboard(event.clipboardData);
+              }}
+              className="min-h-40 w-full resize-none bg-transparent text-body text-ink outline-none [-webkit-user-select:text] placeholder:text-muted"
+            />
           )}
         </div>
         {error ? (
@@ -390,6 +397,12 @@ function formatBoardError(message: string): ReactNode {
     );
   }
   return message;
+}
+
+function pasteHasImage(data: DataTransfer | null) {
+  if (!data) return false;
+  if ([...data.items].some((item) => item.type.startsWith("image/"))) return true;
+  return [...data.files].some((file) => !file.type || file.type.startsWith("image/"));
 }
 
 function copyStoredText(event: ReactClipboardEvent<HTMLParagraphElement>, text: string) {
