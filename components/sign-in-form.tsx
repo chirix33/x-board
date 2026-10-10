@@ -32,20 +32,6 @@ export function SignInForm({ nextPath }: { nextPath?: string | null }) {
 
   const errorId = "sign-in-error";
 
-  async function pasteInto(setValue: (value: string) => void) {
-    setError(null);
-    try {
-      const text = (await navigator.clipboard.readText()).trim();
-      if (!text) {
-        setError("Nothing to paste");
-        return;
-      }
-      setValue(text);
-    } catch {
-      setError("Tap Allow Paste at the top of the screen, then press Paste again.");
-    }
-  }
-
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-s">
       <div className="flex flex-col gap-2xs">
@@ -53,9 +39,6 @@ export function SignInForm({ nextPath }: { nextPath?: string | null }) {
           <label className="text-body" htmlFor="sign-in-email">
             Email
           </label>
-          <Button type="button" variant="ghost" onClick={() => void pasteInto(setEmail)}>
-            Paste
-          </Button>
         </div>
         <input
           id="sign-in-email"
@@ -75,9 +58,6 @@ export function SignInForm({ nextPath }: { nextPath?: string | null }) {
           <label className="text-body" htmlFor="sign-in-password">
             Password
           </label>
-          <Button type="button" variant="ghost" onClick={() => void pasteInto(setPassword)}>
-            Paste
-          </Button>
         </div>
         <input
           id="sign-in-password"
