@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ChangeEvent,
   type ClipboardEvent as ReactClipboardEvent,
   type ReactNode,
 } from "react";
@@ -18,11 +19,14 @@ import { CLIP_LIST_LIMIT, POLL_INTERVAL_MS, truncateDisplayText } from "@/lib/co
 import {
   IMAGE_TYPE_ERROR,
   copyImage,
+  copyOrShareText,
   copyText,
   draftFromClipboardData,
-  validateText,
+  draftFromFile,
+  presentImage,
   type Draft,
 } from "@/lib/clipboard";
+import { sendDraft } from "@/lib/send-clip";
 
 function formatRelative(iso: string) {
   const deltaSeconds = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
@@ -35,18 +39,18 @@ function formatRelative(iso: string) {
   return formatter.format(-Math.round(hours / 24), "day");
 }
 
-async function readError(response: Response) {
-  try {
-    const data = (await response.json()) as { error?: string };
-    return data.error ?? "Something went wrong";
-  } catch {
-    return "Something went wrong";
-  }
-}
-
-export function Board({ email, initialClips }: { email: string; initialClips: ClipDto[] }) {
+export function Board({
+  email,
+  initialClips,
+  phone,
+}: {
+  email: string;
+  initialClips: ClipDto[];
+  phone: boolean;
+}) {
   const router = useRouter();
   const wellRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<ReactNode>(null);
   const [sending, setSending] = useState(false);
@@ -163,70 +167,30 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
     if (!draft || sending) return;
     setSending(true);
     setError(null);
-    const id = crypto.randomUUID();
     try {
-      if (draft.kind === "text") {
-        const invalid = validateText(draft.text);
-        if (invalid) {
-          setError(invalid);
-          return;
-        }
-        const response = await fetch("/api/clips", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, kind: "text", text: draft.text }),
-        });
-        if (!response.ok) {
-          setError(formatBoardError(await readError(response)));
-          return;
-        }
-      } else {
-        const urlResponse = await fetch("/api/clips/upload-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contentType: draft.file.type,
-            byteSize: draft.file.size,
-          }),
-        });
-        if (!urlResponse.ok) {
-          setError(formatBoardError(await readError(urlResponse)));
-          return;
-        }
-        const { objectKey, uploadUrl } = (await urlResponse.json()) as {
-          objectKey: string;
-          uploadUrl: string;
-        };
-        const uploaded = await fetch(uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": draft.file.type },
-          body: draft.file,
-        });
-        if (!uploaded.ok) {
-          setError("Could not upload the image");
-          return;
-        }
-        const confirm = await fetch("/api/clips", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id,
-            kind: "image",
-            objectKey,
-            contentType: draft.file.type,
-            byteSize: draft.file.size,
-          }),
-        });
-        if (!confirm.ok) {
-          setError(formatBoardError(await readError(confirm)));
-          return;
-        }
+      const invalid = await sendDraft(draft);
+      if (invalid) {
+        setError(formatBoardError(invalid));
+        return;
       }
       replaceDraft(null);
       await refresh();
     } finally {
       setSending(false);
     }
+  }
+
+  async function onPhoto(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const result = await draftFromFile(file);
+    if ("error" in result) {
+      setError(formatBoardError(result.error));
+      return;
+    }
+    setError(null);
+    replaceDraft(result);
   }
 
   return (
@@ -270,20 +234,40 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           }}
           className="flex min-h-40 flex-col justify-center rounded-[var(--radius-well)] border border-border bg-surface p-s"
         >
-          {draft?.kind === "text" ? (
-            <p
-              className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body"
-              onCopy={(event) => copyStoredText(event, draft.text)}
-            >
-              {truncateDisplayText(draft.text)}
-            </p>
-          ) : draft?.kind === "image" ? (
+          {draft?.kind === "image" ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={draft.previewUrl}
               alt="Pasted image ready to send"
               className="max-h-80 w-max max-w-full rounded-[6px] outline outline-offset-[-1px] outline-[var(--color-image-outline)]"
             />
+          ) : phone ? (
+            <textarea
+              value={draft?.kind === "text" ? draft.text : ""}
+              placeholder="Paste text here."
+              rows={6}
+              onChange={(event) => {
+                const text = event.target.value;
+                if (!text) {
+                  replaceDraft(null);
+                  return;
+                }
+                replaceDraft({ kind: "text", text });
+              }}
+              onPaste={(event) => {
+                if (!pasteHasImage(event.clipboardData)) return;
+                event.preventDefault();
+                void applyClipboard(event.clipboardData);
+              }}
+              className="min-h-40 w-full resize-none bg-transparent text-body text-ink outline-none placeholder:text-muted"
+            />
+          ) : draft?.kind === "text" ? (
+            <p
+              className="max-w-[65ch] whitespace-pre-wrap break-words text-pretty text-body"
+              onCopy={(event) => copyStoredText(event, draft.text)}
+            >
+              {truncateDisplayText(draft.text)}
+            </p>
           ) : (
             <p className="text-body text-muted">
               Paste with <strong>Ctrl+V</strong> or <strong>⌘V</strong>.
@@ -296,9 +280,24 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
           </p>
         ) : null}
         <div className="flex justify-end gap-xs">
-          <Button type="button" variant="outline" onClick={() => void onPasteClick()}>
-            Paste
-          </Button>
+          {phone ? (
+            <>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => void onPhoto(event)}
+              />
+              <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
+                Choose photo
+              </Button>
+            </>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => void onPasteClick()}>
+              Paste
+            </Button>
+          )}
           <Button
             type="button"
             variant="primary"
@@ -351,11 +350,13 @@ export function Board({ email, initialClips }: { email: string; initialClips: Cl
                 <CopyButton
                   onCopy={async () => {
                     if (clip.kind === "text" && clip.text) {
-                      await copyText(clip.text);
+                      if (phone) await copyOrShareText(clip.text);
+                      else await copyText(clip.text);
                       return;
                     }
                     if (clip.kind === "image") {
-                      await copyImage(`/api/clips/${clip.id}/file`);
+                      if (phone) await presentImage(`/api/clips/${clip.id}/file`);
+                      else await copyImage(`/api/clips/${clip.id}/file`);
                     }
                   }}
                 />
@@ -395,6 +396,12 @@ function formatBoardError(message: string): ReactNode {
 function copyStoredText(event: ReactClipboardEvent<HTMLParagraphElement>, text: string) {
   event.preventDefault();
   event.clipboardData.setData("text/plain", text);
+}
+
+function pasteHasImage(data: DataTransfer | null) {
+  if (!data) return false;
+  if ([...data.items].some((item) => item.type.startsWith("image/"))) return true;
+  return [...data.files].some((file) => !file.type || file.type.startsWith("image/"));
 }
 
 function textToDataTransfer(text: string) {
